@@ -33,15 +33,15 @@ Most ops teams fragment their work across a ticketing tool, a chat thread, a tas
 
 ## Core Surfaces
 
-| Surface | What it does |
-| --- | --- |
-| **Tickets** | Full lifecycle — status, priority, temperature, SLA, rich-text resolution, realtime comments, immutable audit trail |
-| **SLA Engine** | Per-priority response & resolution policies, auto-assigned on creation, pause/resume on customer-blocked statuses, computed at read time — no cron, no drift |
-| **AI Knowledge Center** | Closed tickets + uploaded PDFs chunked and embedded via Gemini. Unified retrieval ranked by similarity, governed by admin-tunable weights and thresholds |
-| **Projects & Scrum** | Projects, sprints, work items (epic / story / task / bug), drag-and-drop Kanban board, and a unified Sprints planning view (active/planned sprints, backlog, and completed sprints as collapsible sections with thin item rows + story-point totals; drag items between any sprint and the backlog; a global search + type + priority filter bar narrows every section at once; dragging a `done` item out of a completed sprint re-flags it `rework`) — same auth, same teams |
-| **Team Management** | Business, support (L1/L2), and engineering squads — CRUD inline, many-to-many membership with roles |
-| **Client Companies (CRM)** | Per-client view at `/companies` — contacts, tickets grouped by category, linked project features, and a categorical **health meter** with a full change history. Tickets & projects carry an optional `company_id` |
-| **Client Support Portal** | Public, unauthenticated animated hero at `/support` where external clients submit tickets — validates, simulates submission, and tags the payload `source: "client-portal"` to distinguish external from internal requests |
+| Surface                    | What it does                                                                                                                                                                                                               |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tickets**                | Full lifecycle — status, priority, temperature, SLA, rich-text resolution, realtime comments, immutable audit trail                                                                                                        |
+| **SLA Engine**             | Per-priority response & resolution policies, auto-assigned on creation, pause/resume on customer-blocked statuses, computed at read time — no cron, no drift                                                               |
+| **AI Knowledge Center**    | Closed tickets + uploaded PDFs chunked and embedded via Gemini. Unified retrieval ranked by similarity, governed by admin-tunable weights and thresholds                                                                   |
+| **Projects & Scrum**       | Projects, sprints, work items (epic / story / task / bug), drag-and-drop Kanban board, and a unified Sprints planning view                                                                                                 |
+| **Team Management**        | Business, support (L1/L2), and engineering squads — CRUD inline, many-to-many membership with roles                                                                                                                        |
+| **Client Companies (CRM)** | Per-client view at `/companies` — contacts, tickets grouped by category, linked project features, and a categorical **health meter** with a full change history. Tickets & projects carry an optional `company_id`         |
+| **Client Support Portal**  | Public, unauthenticated animated hero at `/support` where external clients submit tickets — validates, simulates submission, and tags the payload `source: "client-portal"` to distinguish external from internal requests |
 
 ---
 
@@ -87,12 +87,14 @@ Most ops teams fragment their work across a ticketing tool, a chat thread, a tas
 ## AI — First-Class, Not a Feature
 
 **In the product:**
+
 - Every ticket close generates a 768-dim Gemini embedding via `pg_net` → edge function — no manual step, no queue
 - An **AI Research panel** embeds the query and runs `match_knowledge()` across ticket resolutions and KB documents in real time
 - PDF ingestion: upload → edge function → `unpdf` extraction → chunking → Gemini batch embedding → `pgvector` — fully automated
 - Retrieval is governed: similarity threshold, max results, per-source weights, per-document toggle — all admin-configurable, all audited
 
 **In the codebase:**
+
 - Built end-to-end with Claude Code and GitHub Copilot woven into the development workflow
 - AI-assisted development is part of the thesis: this is what modern engineering looks like
 
@@ -132,13 +134,13 @@ Most ops teams fragment their work across a ticketing tool, a chat thread, a tas
 
 **Key decisions:**
 
-| Decision | Why |
-| --- | --- |
-| **Owned API layer (Fastify)** — web app holds auth cookies only | Supabase is an implementation detail. The API can be versioned, rate-limited, tested, replaced. OpenAPI comes for free |
-| **Business logic in Postgres triggers** — history, SLA state, resolution validation | Invariants hold regardless of client. The database is the contract |
-| **RLS as the security boundary** | Frontend checks are UX. RLS is the final word — auditable, declarative |
-| **SLA status is a pure function** of stored timestamps | Never wrong, never drifts, zero cron overhead |
-| **Server Components first** — client islands only where stateful | No waterfall on the client; cheap server data fetches |
+| Decision                                                                            | Why                                                                                                                    |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Owned API layer (Fastify)** — web app holds auth cookies only                     | Supabase is an implementation detail. The API can be versioned, rate-limited, tested, replaced. OpenAPI comes for free |
+| **Business logic in Postgres triggers** — history, SLA state, resolution validation | Invariants hold regardless of client. The database is the contract                                                     |
+| **RLS as the security boundary**                                                    | Frontend checks are UX. RLS is the final word — auditable, declarative                                                 |
+| **SLA status is a pure function** of stored timestamps                              | Never wrong, never drifts, zero cron overhead                                                                          |
+| **Server Components first** — client islands only where stateful                    | No waterfall on the client; cheap server data fetches                                                                  |
 
 > Full endpoint reference — every route, request shape, and error code — in [docs/API_CONTRACTS.md](docs/API_CONTRACTS.md). Live OpenAPI UI at `:8080/docs`.
 
@@ -146,17 +148,17 @@ Most ops teams fragment their work across a ticketing tool, a chat thread, a tas
 
 ## Stack
 
-| Layer | Technology |
-| --- | --- |
-| Frontend | **Next.js 16** — App Router, Server Actions, Server Components |
-| API | **Fastify 5** — TypeScript strict, Zod validation, OpenAPI at `/docs` |
-| UI | **React 19**, **shadcn/ui** + Radix, **Tailwind 3**, **Tiptap v3** |
-| Language | **TypeScript 5** strict — `database.types.ts` generated and authoritative |
-| Data | **Supabase** — Postgres + Auth + Storage + Edge Functions (Deno) |
-| Vector | **pgvector** (768-dim) + **Gemini `gemini-embedding-001`** |
-| Forms | **react-hook-form** + **Zod** |
-| Client cache | **TanStack Query v5** — optimistic mutations, surgical usage |
-| DnD | **@dnd-kit** — accessible drag-and-drop on sprint board |
+| Layer        | Technology                                                                |
+| ------------ | ------------------------------------------------------------------------- |
+| Frontend     | **Next.js 16** — App Router, Server Actions, Server Components            |
+| API          | **Fastify 5** — TypeScript strict, Zod validation, OpenAPI at `/docs`     |
+| UI           | **React 19**, **shadcn/ui** + Radix, **Tailwind 3**, **Tiptap v3**        |
+| Language     | **TypeScript 5** strict — `database.types.ts` generated and authoritative |
+| Data         | **Supabase** — Postgres + Auth + Storage + Edge Functions (Deno)          |
+| Vector       | **pgvector** (768-dim) + **Gemini `gemini-embedding-001`**                |
+| Forms        | **react-hook-form** + **Zod**                                             |
+| Client cache | **TanStack Query v5** — optimistic mutations, surgical usage              |
+| DnD          | **@dnd-kit** — accessible drag-and-drop on sprint board                   |
 
 ---
 
@@ -192,11 +194,11 @@ pnpm dev    # web :3000 · API :8080 · OpenAPI :8080/docs
 
 Three-tier strategy — cheap tiers gate slow ones.
 
-| Tier | Tool | What it proves | Command |
-| --- | --- | --- | --- |
-| **Unit** | Vitest | Pure functions, zero network, sub-second | `pnpm test:unit` |
-| **Integration** | Vitest | Each Fastify route against real Postgres + RLS + triggers — catches schema regressions and RLS drift that typechecking can't | `pnpm test:integration` |
-| **E2E** | Playwright | Real Chromium against the full stack — auth, ticket lifecycle, sprint board, client isolation, admin gating | `pnpm test:e2e` |
+| Tier            | Tool       | What it proves                                                                                                               | Command                 |
+| --------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| **Unit**        | Vitest     | Pure functions, zero network, sub-second                                                                                     | `pnpm test:unit`        |
+| **Integration** | Vitest     | Each Fastify route against real Postgres + RLS + triggers — catches schema regressions and RLS drift that typechecking can't | `pnpm test:integration` |
+| **E2E**         | Playwright | Real Chromium against the full stack — auth, ticket lifecycle, sprint board, client isolation, admin gating                  | `pnpm test:e2e`         |
 
 Integration tests hit a real local Supabase stack (`supabase start`) — no mocks, no stubs, because that's the only way to be sure RLS works after a migration.
 
@@ -206,13 +208,13 @@ Integration tests hit a real local Supabase stack (`supabase start`) — no mock
 
 Runs on every push to `main` / `develop` and on every PR.
 
-| Job | Fails on |
-| --- | --- |
-| **Typecheck** — `tsc --noEmit` for both apps | Any TS error |
-| **Unit** — Vitest suites | Any failing assertion |
-| **Audit** — `pnpm audit --audit-level=high` | HIGH or CRITICAL CVE |
+| Job                                                                         | Fails on                   |
+| --------------------------------------------------------------------------- | -------------------------- |
+| **Typecheck** — `tsc --noEmit` for both apps                                | Any TS error               |
+| **Unit** — Vitest suites                                                    | Any failing assertion      |
+| **Audit** — `pnpm audit --audit-level=high`                                 | HIGH or CRITICAL CVE       |
 | **Semgrep** — OWASP Top 10 rules for Node/TS ([.semgrep.yml](.semgrep.yml)) | Any ERROR-severity finding |
-| **Secret Scan** — Gitleaks full history ([.gitleaks.toml](.gitleaks.toml)) | Any real leaked credential |
+| **Secret Scan** — Gitleaks full history ([.gitleaks.toml](.gitleaks.toml))  | Any real leaked credential |
 
 Security jobs (Semgrep, Gitleaks) run in parallel and don't wait for typecheck — a leaked secret blocks a merge even if the code doesn't compile. Integration tests run locally before merging API/route changes (CI job exists but is gated off to avoid cold-start cost).
 
@@ -223,11 +225,13 @@ Security jobs (Semgrep, Gitleaks) run in parallel and don't wait for typecheck �
 MERA is open to collaboration — bug reports, feature ideas, pull requests, or just a thought.
 
 **Good places to start:**
+
 - Browse open issues for `good first issue` labels
 - Try the setup and report friction in the onboarding experience
 - Pick anything from the roadmap that excites you
 
 **Core conventions:**
+
 - **Web → API**: `api.*` (server-side) or `apiBrowser.*` (client-side) — never call Supabase directly from `apps/web`
 - **API → DB**: all data access in `apps/api/src/services/`; routes are thin handlers
 - Schema changes = new file under `supabase/migrations/` + regenerate `database.types.ts` in both apps

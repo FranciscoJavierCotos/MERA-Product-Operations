@@ -117,8 +117,8 @@ export function ProjectSettingsClient({
   return (
     <div className="space-y-6">
       {/* ── Main settings ───────────────────────────────────────────────────── */}
-      <div className="max-w-2xl rounded-lg border bg-white p-6 space-y-4">
-        <h2 className="text-lg font-semibold">Project settings</h2>
+      <div className="max-w-2xl rounded-lg border bg-card p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-card-foreground">Project settings</h2>
 
         <div>
           <Label htmlFor="name">Name</Label>
@@ -164,8 +164,8 @@ export function ProjectSettingsClient({
 
         {/* Sprint duration — only relevant for Scrum */}
         {project.methodology === "scrum" && (
-          <div className="rounded-md border border-gray-200 bg-gray-50 p-4 space-y-3">
-            <h3 className="text-sm font-medium text-gray-700">Scrum settings</h3>
+          <div className="rounded-md border bg-muted/50 p-4 space-y-3">
+            <h3 className="text-sm font-medium text-foreground">Scrum settings</h3>
             <div className="max-w-xs">
               <Label htmlFor="sprint-duration">Sprint duration</Label>
               <Select
@@ -181,7 +181,7 @@ export function ProjectSettingsClient({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 When creating a sprint, picking a start date will automatically fill the end
                 date based on this duration.
               </p>
@@ -207,9 +207,9 @@ export function ProjectSettingsClient({
 
       {/* ── Danger zone (admin-only) ─────────────────────────────────────────── */}
       {isAdmin && (
-        <div className="max-w-2xl rounded-lg border border-red-200 bg-red-50 p-6 space-y-3">
-          <h2 className="text-lg font-semibold text-red-700">Danger zone</h2>
-          <p className="text-sm text-red-600">
+        <div className="max-w-2xl rounded-lg border border-red-500/30 bg-red-500/10 p-6 space-y-3">
+          <h2 className="text-lg font-semibold text-red-400">Danger zone</h2>
+          <p className="text-sm text-red-400/80">
             Permanently delete this project and everything inside it — sprints, work
             items, comments, history, and all ticket links. <strong>This cannot be undone.</strong>
           </p>
@@ -237,22 +237,22 @@ export function ProjectSettingsClient({
           <DialogHeader>
             <DialogTitle className="text-red-600">Delete project</DialogTitle>
             <DialogDescription asChild>
-              <div className="space-y-3 text-sm text-gray-600">
+              <div className="space-y-3 text-sm text-muted-foreground">
                 <p>
                   This will <strong>permanently delete</strong>{" "}
-                  <span className="font-mono font-semibold text-gray-800">
+                  <span className="font-mono font-semibold text-foreground">
                     {project.key}
                   </span>{" "}
                   — <strong>{project.name}</strong> — and remove:
                 </p>
-                <ul className="list-disc list-inside space-y-1 text-gray-600">
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                   <li>All sprints and their history</li>
                   <li>All work items, comments, and audit history</li>
                   <li>All links between tickets and work items in this project</li>
                 </ul>
-                <p className="font-medium text-gray-800">
+                <p className="font-medium text-foreground">
                   Type the project key{" "}
-                  <span className="font-mono bg-gray-100 px-1 rounded">
+                  <span className="font-mono bg-muted px-1 rounded">
                     {project.key}
                   </span>{" "}
                   to confirm:

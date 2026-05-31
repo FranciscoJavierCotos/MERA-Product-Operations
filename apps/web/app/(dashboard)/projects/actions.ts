@@ -222,7 +222,6 @@ export async function deleteSprintAction(
     await api.del(`/sprints/${sprintId}`);
     revalidatePath(`/projects/${projectKey}/sprints`);
     revalidatePath(`/projects/${projectKey}`);
-    revalidatePath(`/projects/${projectKey}/backlog`);
     return { ok: true, data: null };
   } catch (err) {
     return { ok: false, error: asError(err) };
@@ -253,7 +252,6 @@ export async function completeSprintAction(
     await api.post(`/sprints/${sprintId}/complete`);
     revalidatePath(`/projects/${projectKey}/sprints`);
     revalidatePath(`/projects/${projectKey}`);
-    revalidatePath(`/projects/${projectKey}/backlog`);
     return { ok: true, data: null };
   } catch (err) {
     return { ok: false, error: asError(err) };
@@ -294,7 +292,7 @@ export async function createWorkItemAction(
     });
 
     revalidatePath(`/projects/${projectKey}`);
-    revalidatePath(`/projects/${projectKey}/backlog`);
+    revalidatePath(`/projects/${projectKey}/sprints`);
     return { ok: true, data: { item_key: item.item_key } };
   } catch (err) {
     return { ok: false, error: asError(err) };
@@ -317,7 +315,7 @@ export async function updateWorkItemAction(
     }
     const item = await api.patch<WorkItem>(`/work-items/${workItemId}`, parsed.data);
     revalidatePath(`/projects/${projectKey}`);
-    revalidatePath(`/projects/${projectKey}/backlog`);
+    revalidatePath(`/projects/${projectKey}/sprints`);
     return { ok: true, data: item };
   } catch (err) {
     return { ok: false, error: asError(err) };

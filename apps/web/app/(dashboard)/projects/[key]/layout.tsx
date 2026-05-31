@@ -16,7 +16,7 @@ export default async function ProjectLayout({ children, params }: LayoutProps) {
 
   return (
     <div className="space-y-4">
-      <Link href="/projects" className="text-sm text-gray-500 hover:text-gray-700">
+      <Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground">
         ← All projects
       </Link>
       <ProjectHeader project={project} />

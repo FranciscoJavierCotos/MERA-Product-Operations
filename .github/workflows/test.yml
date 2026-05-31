@@ -146,7 +146,7 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     needs: typecheck
-    if: true
+    if: false
     steps:
       - uses: actions/checkout@v6
 

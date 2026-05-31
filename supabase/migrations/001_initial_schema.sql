@@ -36,7 +36,7 @@ CREATE TYPE project_methodology AS ENUM ('scrum', 'kanban', 'waterfall');
 CREATE TYPE project_status      AS ENUM ('active', 'archived');
 CREATE TYPE sprint_status       AS ENUM ('planned', 'active', 'completed');
 CREATE TYPE work_item_type      AS ENUM ('epic', 'story', 'task', 'bug');
-CREATE TYPE work_item_status    AS ENUM ('todo', 'in_progress', 'in_review', 'done');
+CREATE TYPE work_item_status    AS ENUM ('todo', 'in_progress', 'in_review', 'done', 'rework');
 
 
 -- ============================================================

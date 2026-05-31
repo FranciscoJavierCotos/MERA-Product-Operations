@@ -3,16 +3,28 @@
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { WorkItemTypeBadge } from "./work-item-type-badge";
+import { WorkItemPriorityDropdown } from "./work-item-priority-dropdown";
 import type { WorkItemWithRelations } from "@/types/work-item.types";
+import type { TicketPriorityRow } from "@/types/ticket.types";
 
 interface Props {
   item: WorkItemWithRelations;
   onOpen?: () => void;
   dragHandleProps?: Record<string, unknown>;
   isDragging?: boolean;
+  /** When provided alongside `priorities`, the priority pill becomes an inline dropdown. */
+  priorities?: TicketPriorityRow[];
+  onPriorityChange?: (priorityId: number | null) => void;
 }
 
-export function WorkItemCard({ item, onOpen, dragHandleProps, isDragging }: Props) {
+export function WorkItemCard({
+  item,
+  onOpen,
+  dragHandleProps,
+  isDragging,
+  priorities,
+  onPriorityChange,
+}: Props) {
   return (
     <div
       className={`rounded-md border bg-white dark:bg-card border-border p-3 shadow-sm hover:border-primary/40 transition-colors cursor-pointer ${
@@ -30,8 +42,16 @@ export function WorkItemCard({ item, onOpen, dragHandleProps, isDragging }: Prop
 
       <div className="flex items-center justify-between mt-3">
         <div className="flex items-center gap-2">
-          {item.priority && (
-            <Badge className={item.priority.color_class}>{item.priority.label}</Badge>
+          {priorities && onPriorityChange ? (
+            <WorkItemPriorityDropdown
+              priority={item.priority}
+              priorities={priorities}
+              onChange={onPriorityChange}
+            />
+          ) : (
+            item.priority && (
+              <Badge className={item.priority.color_class}>{item.priority.label}</Badge>
+            )
           )}
           {item.story_points != null && (
             <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-muted rounded-full px-2 py-0.5">

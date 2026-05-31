@@ -22,7 +22,7 @@ export const updateWorkItemSchema = z.object({
   sprint_id: z.string().uuid().optional().nullable(),
   type: z.enum(["epic", "story", "task", "bug"]).optional(),
   status: z
-    .enum(["todo", "in_progress", "in_review", "done"])
+    .enum(["todo", "in_progress", "in_review", "done", "rework"])
     .optional(),
   title: z.string().trim().min(1).max(200).optional(),
   description: z.string().max(20000).optional().nullable(),
@@ -40,7 +40,7 @@ export const workItemCommentSchema = z.object({
 export const reorderWorkItemSchema = z.object({
   item_id: z.string().uuid(),
   status: z
-    .enum(["todo", "in_progress", "in_review", "done"])
+    .enum(["todo", "in_progress", "in_review", "done", "rework"])
     .optional(),
   sprint_id: z.string().uuid().nullable().optional(),
   before_rank: z.string().optional().nullable(),

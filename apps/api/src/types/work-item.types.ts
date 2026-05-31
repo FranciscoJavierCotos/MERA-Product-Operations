@@ -2,13 +2,19 @@ import type { Profile } from "./user.types";
 import type { TicketPriorityRow } from "./ticket.types";
 
 export type WorkItemType = "epic" | "story" | "task" | "bug";
-export type WorkItemStatus = "todo" | "in_progress" | "in_review" | "done";
+export type WorkItemStatus =
+  | "todo"
+  | "in_progress"
+  | "in_review"
+  | "done"
+  | "rework";
 
 export const WORK_ITEM_STATUSES: WorkItemStatus[] = [
   "todo",
   "in_progress",
   "in_review",
   "done",
+  "rework",
 ];
 
 export const WORK_ITEM_STATUS_LABELS: Record<WorkItemStatus, string> = {
@@ -16,6 +22,7 @@ export const WORK_ITEM_STATUS_LABELS: Record<WorkItemStatus, string> = {
   in_progress: "In Progress",
   in_review: "In Review",
   done: "Done",
+  rework: "Rework",
 };
 
 export const WORK_ITEM_TYPES: WorkItemType[] = ["epic", "story", "task", "bug"];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   DndContext,
@@ -25,6 +25,7 @@ import Link from "next/link";
 import { WorkItemCard } from "./work-item-card";
 import { WorkItemForm } from "./work-item-form";
 import { WorkItemDetailDialog } from "./work-item-detail-dialog";
+import { updateWorkItemAction } from "@/app/(dashboard)/projects/actions";
 import {
   WORK_ITEM_STATUSES,
   WORK_ITEM_STATUS_LABELS,
@@ -100,12 +101,16 @@ export function SprintBoardClient({
   // ── Active sprint board state ──
   const [columns, setColumns] = useState<ItemMap>(() => toMap(initialBoard));
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  // Tracks the last successfully committed state so error rollback doesn't
+  // undo prior successful drags within the same session.
+  const committedColumns = useRef<ItemMap>(toMap(initialBoard));
 
   // ── Next sprint board state ──
   const [nextColumns, setNextColumns] = useState<ItemMap>(() =>
     toMap(nextSprintBoard),
   );
   const [nextActiveDragId, setNextActiveDragId] = useState<string | null>(null);
+  const committedNextColumns = useRef<ItemMap>(toMap(nextSprintBoard));
 
   // ── Shared detail + create state ──
   const [createOpen, setCreateOpen] = useState(false);
@@ -116,10 +121,14 @@ export function SprintBoardClient({
   const [detailOpen, setDetailOpen] = useState(focusedItem != null);
 
   useEffect(() => {
-    setColumns(toMap(initialBoard));
+    const m = toMap(initialBoard);
+    committedColumns.current = m;
+    setColumns(m);
   }, [initialBoard]);
   useEffect(() => {
-    setNextColumns(toMap(nextSprintBoard));
+    const m = toMap(nextSprintBoard);
+    committedNextColumns.current = m;
+    setNextColumns(m);
   }, [nextSprintBoard]);
   useEffect(() => {
     setDetailItem(focusedItem);
@@ -202,8 +211,10 @@ export function SprintBoardClient({
         before_rank: before,
         after_rank: after,
       });
+      committedColumns.current = next;
+      router.refresh();
     } catch {
-      setColumns(toMap(initialBoard));
+      setColumns(committedColumns.current);
     }
   };
 
@@ -247,9 +258,49 @@ export function SprintBoardClient({
         before_rank: before,
         after_rank: after,
       });
+      committedNextColumns.current = next;
+      router.refresh();
     } catch {
-      setNextColumns(toMap(nextSprintBoard));
+      setNextColumns(committedNextColumns.current);
     }
+  };
+
+  // ── Inline priority change from a card's priority pill ──
+  const priorityById = (id: number | null): TicketPriorityRow | null =>
+    id == null ? null : (priorities.find((p) => p.id === id) ?? null);
+
+  const applyPriority = (
+    map: ItemMap,
+    itemId: string,
+    priorityId: number | null,
+  ): ItemMap => {
+    const next: ItemMap = {};
+    for (const [status, items] of Object.entries(map)) {
+      next[status] = items.map((i) =>
+        i.id === itemId
+          ? { ...i, priority_id: priorityId, priority: priorityById(priorityId) }
+          : i,
+      );
+    }
+    return next;
+  };
+
+  const changePriority = async (itemId: string, priorityId: number | null) => {
+    const nextActive = applyPriority(columns, itemId, priorityId);
+    const nextNext = applyPriority(nextColumns, itemId, priorityId);
+    setColumns(nextActive);
+    setNextColumns(nextNext);
+    const result = await updateWorkItemAction(project.key, itemId, {
+      priority_id: priorityId,
+    });
+    if (!result.ok) {
+      setColumns(committedColumns.current);
+      setNextColumns(committedNextColumns.current);
+      return;
+    }
+    committedColumns.current = nextActive;
+    committedNextColumns.current = nextNext;
+    router.refresh();
   };
 
   const openCreate = (sprintId: string | null) => {
@@ -287,14 +338,7 @@ export function SprintBoardClient({
           <Inbox className="h-8 w-8 mx-auto text-gray-400 dark:text-gray-500" />
           <p className="text-gray-600 dark:text-gray-400 mt-2">No active sprint.</p>
           <p className="text-sm text-gray-500">
-            Plan items in the{" "}
-            <Link
-              className="text-primary underline"
-              href={`/projects/${project.key}/backlog`}
-            >
-              backlog
-            </Link>{" "}
-            and start a sprint from{" "}
+            Plan items and start a sprint from{" "}
             <Link
               className="text-primary underline"
               href={`/projects/${project.key}/sprints`}
@@ -341,13 +385,15 @@ export function SprintBoardClient({
             onDragStart={onActiveDragStart}
             onDragEnd={onActiveDragEnd}
           >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
               {WORK_ITEM_STATUSES.map((status) => (
                 <BoardColumnUI
                   key={status}
                   status={status}
                   items={columns[status] ?? []}
                   onOpen={openDetail}
+                  priorities={priorities}
+                  onPriorityChange={changePriority}
                 />
               ))}
             </div>
@@ -397,13 +443,15 @@ export function SprintBoardClient({
             onDragStart={onNextDragStart}
             onDragEnd={onNextDragEnd}
           >
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
               {WORK_ITEM_STATUSES.map((status) => (
                 <BoardColumnUI
                   key={status}
                   status={status}
                   items={nextColumns[status] ?? []}
                   onOpen={openDetail}
+                  priorities={priorities}
+                  onPriorityChange={changePriority}
                   muted
                 />
               ))}
@@ -462,11 +510,15 @@ function BoardColumnUI({
   status,
   items,
   onOpen,
+  priorities,
+  onPriorityChange,
   muted = false,
 }: {
   status: WorkItemStatus;
   items: WorkItemWithRelations[];
   onOpen: (item: WorkItemWithRelations) => void;
+  priorities: TicketPriorityRow[];
+  onPriorityChange: (itemId: string, priorityId: number | null) => void;
   muted?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
@@ -494,6 +546,8 @@ function BoardColumnUI({
               key={item.id}
               item={item}
               onOpen={() => onOpen(item)}
+              priorities={priorities}
+              onPriorityChange={onPriorityChange}
             />
           ))}
         </div>
@@ -505,9 +559,13 @@ function BoardColumnUI({
 function SortableItem({
   item,
   onOpen,
+  priorities,
+  onPriorityChange,
 }: {
   item: WorkItemWithRelations;
   onOpen: () => void;
+  priorities: TicketPriorityRow[];
+  onPriorityChange: (itemId: string, priorityId: number | null) => void;
 }) {
   const {
     attributes,
@@ -530,7 +588,13 @@ function SortableItem({
 
   return (
     <div ref={setNodeRef} style={style} {...stableAttributes} {...listeners}>
-      <WorkItemCard item={item} onOpen={onOpen} isDragging={isDragging} />
+      <WorkItemCard
+        item={item}
+        onOpen={onOpen}
+        isDragging={isDragging}
+        priorities={priorities}
+        onPriorityChange={(priorityId) => onPriorityChange(item.id, priorityId)}
+      />
     </div>
   );
 }
@@ -553,7 +617,7 @@ function BacklogPreview({
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-medium">Backlog preview</h3>
         <Link
-          href={`/projects/${project.key}/backlog`}
+          href={`/projects/${project.key}/sprints`}
           className="text-xs text-primary hover:underline"
         >
           See all →

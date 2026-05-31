@@ -2350,7 +2350,7 @@ export type Database = {
         | "resolved"
         | "closed"
       user_role: "admin" | "support_lead" | "support_member" | "client"
-      work_item_status: "todo" | "in_progress" | "in_review" | "done"
+      work_item_status: "todo" | "in_progress" | "in_review" | "done" | "rework"
       work_item_type: "epic" | "story" | "task" | "bug"
     }
     CompositeTypes: {
@@ -2519,7 +2519,7 @@ export const Constants = {
         "closed",
       ],
       user_role: ["admin", "support_lead", "support_member", "client"],
-      work_item_status: ["todo", "in_progress", "in_review", "done"],
+      work_item_status: ["todo", "in_progress", "in_review", "done", "rework"],
       work_item_type: ["epic", "story", "task", "bug"],
     },
   },

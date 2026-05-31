@@ -278,6 +278,8 @@ Uses fractional-ranking strings (`rank`) for drag-ordering.
 **`WorkItemCreate`** `.strict()`: `{ project_id: uuid, sprint_id?: uuid|null, type?: string, title: string(min1), description?: string|null, priority_id?: int|null, story_points?: int|null, assigned_to?: uuid|null, parent_id?: uuid|null, rank: string }`
 **`WorkItemUpdate`** `.strict()` (all optional): `title`, `description`, `type`, `priority_id`, `story_points`, `assigned_to`, `parent_id`, `sprint_id`, `rank`.
 
+**`status`** (enum `work_item_status`): `todo | in_progress | in_review | done | rework`. `rework` is set by the planning board (`/reorder`) when a `done` item is dragged out of a **completed** sprint into the backlog or another sprint — it is reworked, not freshly done.
+
 ---
 
 ## Item Links — [routes/item-links.ts](../apps/api/src/routes/item-links.ts)

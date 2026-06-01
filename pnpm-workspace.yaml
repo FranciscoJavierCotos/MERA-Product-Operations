@@ -8,3 +8,6 @@ allowBuilds:
   unrs-resolver: true
 
 nodeLinker: hoisted
+
+overrides:
+  vite: "^6.0.0"

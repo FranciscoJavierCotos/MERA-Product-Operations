@@ -156,6 +156,34 @@ Authenticated user + profile row.
 
 ---
 
+## Analytics — [routes/analytics.ts](../apps/api/src/routes/analytics.ts)
+
+Range-scoped, filter-aware aggregates powering the `/analytics` reporting hub
+(the trended counterpart to the real-time `/dashboard`). All reads go through
+the per-request JWT-scoped Supabase client, so RLS is preserved. The `range`
+query param is one of `7d` | `30d` | `qtd` | `ytd` (default `30d`); each
+endpoint compares the current window against the equal-length previous window
+where a delta is meaningful.
+
+| Method | Path | Query | Returns |
+|---|---|---|---|
+| `GET` | `/analytics/summary` | `range=30d` | 5 primary KPIs (`slaCompliance`, `medianResolutionHours`, `p90ResolutionHours`, `netFlow`, `reopenRate`, `atRiskAccounts`), each `{ value, previous, delta }` |
+| `GET` | `/analytics/net-flow` | `range=30d` | `{ range, series: [{ date, created, resolved, net }] }` — daily inflow vs resolved |
+| `GET` | `/analytics/sla-compliance` | `range=30d` | `{ range, byPriority: [{ priority, met, breached, atRisk, compliance }] }` |
+| `GET` | `/analytics/cfd` | `range=30d` | `{ range, series: [{ date, open, resolved, closed }] }` — cumulative flow |
+| `GET` | `/analytics/backlog-aging` | — (current snapshot) | `{ buckets: [{ bucket, low, medium, high, urgent, total }] }` |
+| `GET` | `/analytics/resolution-distribution` | `range=30d` | `{ range, points: [{ hours, priority }], median, p90 }` |
+| `GET` | `/analytics/health-distribution` | `range=30d` | `{ range, levels: [{ level, name, label, emoji, count }], netSlippage }` |
+| `GET` | `/analytics/velocity` | `limit=8` (1..20) | `{ sprints: [{ sprint, committed, completed }], rollingAverage }` |
+
+Notes:
+- Resolution times are **pause-aware**: wall-clock minus `sla_instances.total_paused_minutes`. Percentiles use median + P90 (never the mean).
+- SLA "met" = `resolved_at ≤ resolution_due_at`; `atRisk` counts currently-open tickets already past due.
+- `reopenRate` is derived from `ticket_history` status transitions out of a final status (`resolved`/`closed`) ÷ resolved.
+- `atRiskAccounts.delta` and `health-distribution.netSlippage` are computed from `company_health_history` transitions within the window.
+
+---
+
 ## Teams — [routes/teams.ts](../apps/api/src/routes/teams.ts)
 
 Team types: `business` / `support` / `engineering`. Support levels: `L1`/`L2`/`L3`. Business & engineering teams are always L3.

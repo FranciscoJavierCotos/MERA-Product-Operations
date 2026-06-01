@@ -24,6 +24,7 @@ import { companyRoutes } from "./routes/companies.js";
 import { ticketRoutes } from "./routes/tickets.js";
 import { taskRoutes } from "./routes/tasks.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
+import { analyticsRoutes } from "./routes/analytics.js";
 import { projectRoutes } from "./routes/projects.js";
 import { sprintRoutes } from "./routes/sprints.js";
 import { workItemRoutes } from "./routes/work-items.js";
@@ -94,6 +95,7 @@ async function build() {
   await app.register(ticketRoutes);
   await app.register(taskRoutes);
   await app.register(dashboardRoutes);
+  await app.register(analyticsRoutes);
   await app.register(projectRoutes);
   await app.register(sprintRoutes);
   await app.register(workItemRoutes);

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import {
   LayoutDashboard,
+  BarChart3,
   Ticket,
   CheckSquare,
   Brain,
@@ -29,6 +30,7 @@ const navigation: Array<{
   adminOnly?: boolean;
 }> = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "My Tasks", href: "/tasks", icon: CheckSquare },
   { name: "Tickets", href: "/tickets", icon: Ticket },
   { name: "Projects", href: "/projects", icon: FolderKanban },

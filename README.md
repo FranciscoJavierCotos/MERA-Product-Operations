@@ -42,6 +42,7 @@ Most ops teams fragment their work across a ticketing tool, a chat thread, a tas
 | **Team Management**        | Business, support (L1/L2), and engineering squads — CRUD inline, many-to-many membership with roles                                                                                                                        |
 | **Client Companies (CRM)** | Per-client view at `/companies` — contacts, tickets grouped by category, linked project features, and a categorical **health meter** with a full change history. Tickets & projects carry an optional `company_id`         |
 | **Client Support Portal**  | Public, unauthenticated animated hero at `/support` where external clients submit tickets — validates, simulates submission, and tags the payload `source: "client-portal"` to distinguish external from internal requests |
+| **Analytics**              | Trended reporting hub at `/analytics` — a range-scoped (7d/30d/QTD/YTD) counterpart to the real-time dashboard. Hero KPI strip (SLA compliance, median + P90 resolution, net flow, reopen rate, at-risk accounts) plus Recharts sections for SLA, ticket flow, resolution distribution, account health, and sprint velocity |
 
 ---
 
@@ -153,6 +154,7 @@ Most ops teams fragment their work across a ticketing tool, a chat thread, a tas
 | Frontend     | **Next.js 16** — App Router, Server Actions, Server Components            |
 | API          | **Fastify 5** — TypeScript strict, Zod validation, OpenAPI at `/docs`     |
 | UI           | **React 19**, **shadcn/ui** + Radix, **Tailwind 3**, **Tiptap v3**        |
+| Charts       | **Recharts** — analytics hub charts (Okabe-Ito CVD-safe palette)          |
 | Language     | **TypeScript 5** strict — `database.types.ts` generated and authoritative |
 | Data         | **Supabase** — Postgres + Auth + Storage + Edge Functions (Deno)          |
 | Vector       | **pgvector** (768-dim) + **Gemini `gemini-embedding-001`**                |
@@ -244,7 +246,8 @@ MERA is open to collaboration — bug reports, feature ideas, pull requests, or 
 - [ ] Hybrid retrieval (BM25 + vector) and reranking in `match_knowledge()`
 - [ ] @mentions and threaded comment replies
 - [ ] Email-in → ticket creation (parse + classify on ingest)
-- [ ] Burndown / velocity / cycle-time analytics for Scrum
+- [x] Analytics hub (`/analytics`) — SLA, ticket flow, resolution distribution, account health, sprint velocity
+- [ ] Burndown & cycle-time control charts; bespoke encodings (beeswarm, Sankey, slope) via visx
 - [ ] Customer-facing portal (`role = 'client'`)
 - [ ] Webhook integrations + outbound notifications
 - [ ] Multi-tenant org boundary (currently single-org)

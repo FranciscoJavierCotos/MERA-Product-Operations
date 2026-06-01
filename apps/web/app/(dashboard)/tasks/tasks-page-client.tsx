@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
-import { Task, TaskStats as TaskStatsType } from "@/types/task.types";
+import { useEffect, useMemo, useState } from "react";
+import { Task, TaskPriority, TaskStats as TaskStatsType } from "@/types/task.types";
 import { Profile } from "@/types/user.types";
 import { CreateTaskFormData } from "@/lib/validations/task.schema";
 import {
@@ -14,11 +13,26 @@ import {
   useReopenTask,
   useDeleteTask,
 } from "@/lib/hooks/use-tasks";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TaskList } from "@/components/tasks/task-list";
 import { TaskStats } from "@/components/tasks/task-stats";
 import { TaskForm } from "@/components/tasks/task-form";
+import { TaskList } from "@/components/tasks/task-list";
+import { TaskKanbanBoard } from "@/components/tasks/task-kanban-board";
+import { TaskCalendarView } from "@/components/tasks/task-calendar-view";
+import { TaskTableView } from "@/components/tasks/task-table-view";
+import {
+  TaskFilterToolbar,
+  TaskFiltersState,
+  TaskView,
+  DEFAULT_FILTERS,
+} from "@/components/tasks/task-filter-toolbar";
+import { CompleteTaskDialog } from "@/components/tasks/complete-task-dialog";
+
+const PRIORITY_ORDER: Record<TaskPriority, number> = {
+  urgent: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
+};
 
 interface TasksPageClientProps {
   initialTasks: Task[];
@@ -35,16 +49,14 @@ export function TasksPageClient({
   currentUserId,
   initialCreateOpen = false,
 }: TasksPageClientProps) {
+  const [view, setView] = useState<TaskView>("list");
+  const [filters, setFilters] = useState<TaskFiltersState>(DEFAULT_FILTERS);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [activeTab, setActiveTab] = useState("all");
+  const [taskToComplete, setTaskToComplete] = useState<Task | null>(null);
 
-  // Use React Query with initial data
   const { data: allTasks = initialTasks } = useMyTasks(currentUserId);
-  const { data: pendingTasks = [] } = useMyTasks(currentUserId, "pending");
-  const { data: completedTasks = [] } = useMyTasks(currentUserId, "completed");
-  const { data: stats = initialStats, isLoading: statsLoading } =
-    useTaskStats(currentUserId);
+  const { data: stats = initialStats, isLoading: statsLoading } = useTaskStats(currentUserId);
 
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
@@ -53,12 +65,81 @@ export function TasksPageClient({
   const deleteTask = useDeleteTask();
 
   useEffect(() => {
-    if (initialCreateOpen) {
-      setIsFormOpen(true);
-    }
+    if (initialCreateOpen) setIsFormOpen(true);
   }, [initialCreateOpen]);
 
-  const handleCreateTask = (data: CreateTaskFormData) => {
+  // Filtered + sorted tasks (shared across all views)
+  const filteredTasks = useMemo(() => {
+    let result = [...allTasks];
+
+    if (filters.search) {
+      const s = filters.search.toLowerCase();
+      result = result.filter(
+        (t) =>
+          t.title.toLowerCase().includes(s) ||
+          t.description?.toLowerCase().includes(s)
+      );
+    }
+
+    if (filters.statuses.length > 0) {
+      result = result.filter((t) => filters.statuses.includes(t.status));
+    }
+
+    if (filters.priorities.length > 0) {
+      result = result.filter((t) => filters.priorities.includes(t.priority));
+    }
+
+    if (filters.tags.length > 0) {
+      result = result.filter((t) => filters.tags.includes(t.action_tag));
+    }
+
+    if (filters.dueDateFrom) {
+      const from = new Date(filters.dueDateFrom);
+      result = result.filter(
+        (t) => t.due_date && new Date(t.due_date) >= from
+      );
+    }
+
+    if (filters.dueDateTo) {
+      const to = new Date(filters.dueDateTo);
+      to.setHours(23, 59, 59, 999);
+      result = result.filter(
+        (t) => t.due_date && new Date(t.due_date) <= to
+      );
+    }
+
+    result.sort((a, b) => {
+      let cmp = 0;
+      switch (filters.sortBy) {
+        case "due_date":
+          if (!a.due_date && !b.due_date) cmp = 0;
+          else if (!a.due_date) cmp = 1;
+          else if (!b.due_date) cmp = -1;
+          else
+            cmp =
+              new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+          break;
+        case "priority":
+          cmp = PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority];
+          break;
+        case "created_at":
+          cmp =
+            new Date(b.created_at).getTime() -
+            new Date(a.created_at).getTime();
+          break;
+        case "title":
+          cmp = a.title.localeCompare(b.title);
+          break;
+      }
+      return filters.sortDir === "asc" ? cmp : -cmp;
+    });
+
+    return result;
+  }, [allTasks, filters]);
+
+  // ── Handlers ─────────────────────────────────────────────────────────────
+
+  const handleCreate = (data: CreateTaskFormData) => {
     createTask.mutate({
       title: data.title,
       description: data.description || null,
@@ -72,7 +153,7 @@ export function TasksPageClient({
     setIsFormOpen(false);
   };
 
-  const handleEditTask = (data: CreateTaskFormData) => {
+  const handleEdit = (data: CreateTaskFormData) => {
     if (!editingTask) return;
     updateTask.mutate({
       id: editingTask.id,
@@ -88,99 +169,129 @@ export function TasksPageClient({
     setEditingTask(null);
   };
 
-  const handleComplete = (taskId: string, timeSpentMinutes?: number) => {
-    completeTask.mutate({ id: taskId, timeSpentMinutes });
+  // Called when any view's checkbox/button is clicked for completion
+  const handleCompleteClick = (task: Task) => {
+    if (task.ticket_id) {
+      setTaskToComplete(task);
+    } else {
+      completeTask.mutate({ id: task.id, timeSpentMinutes: undefined });
+    }
   };
 
-  const handleReopen = (task: Task) => {
-    reopenTask.mutate(task.id);
+  const handleCompleteWithTime = (taskId: string, mins?: number) => {
+    completeTask.mutate({ id: taskId, timeSpentMinutes: mins });
+    setTaskToComplete(null);
   };
+
+  const handleReopen = (task: Task) => reopenTask.mutate(task.id);
 
   const handleDelete = (task: Task) => {
-    if (confirm("Are you sure you want to delete this task?")) {
-      deleteTask.mutate(task.id);
-    }
+    if (confirm("Delete this task?")) deleteTask.mutate(task.id);
   };
 
-  const getTasksForTab = () => {
-    switch (activeTab) {
-      case "pending":
-        return pendingTasks;
-      case "completed":
-        return completedTasks;
-      default:
-        return allTasks;
-    }
+  const handleUpdatePriority = (taskId: string, priority: TaskPriority) => {
+    updateTask.mutate({ id: taskId, updates: { priority } });
   };
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Page header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Tasks</h1>
-        <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-          Manage your tasks and track your progress
+        <h1 className="text-3xl font-bold text-foreground">My Tasks</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage your work across board, calendar, and table views
         </p>
       </div>
 
-      {/* Stats */}
+      {/* Stats strip */}
       <TaskStats stats={stats} isLoading={statsLoading} />
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="all">All Tasks ({allTasks.length})</TabsTrigger>
-          <TabsTrigger value="pending">Pending ({stats.pending})</TabsTrigger>
-          <TabsTrigger value="completed">
-            Completed ({stats.completed})
-          </TabsTrigger>
-        </TabsList>
+      {/* Persistent filter toolbar + view switcher */}
+      <TaskFilterToolbar
+        filters={filters}
+        onFiltersChange={setFilters}
+        view={view}
+        onViewChange={setView}
+        totalCount={allTasks.length}
+        filteredCount={filteredTasks.length}
+        onNewTask={() => setIsFormOpen(true)}
+      />
 
-        <TabsContent value={activeTab} className="mt-4">
-          <TaskList
-            tasks={getTasksForTab()}
-            onComplete={handleComplete}
-            onEdit={setEditingTask}
-            onDelete={handleDelete}
-            onReopen={handleReopen}
-            showFilters={activeTab === "all"}
-            toolbarActions={
-              <Button onClick={() => setIsFormOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Task
-              </Button>
-            }
-            emptyMessage={
-              activeTab === "pending"
-                ? "No pending tasks - great job!"
-                : activeTab === "completed"
-                  ? "No completed tasks yet"
-                  : "No tasks found. Create your first task to get started."
-            }
-            isLoading={completeTask.isPending}
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Active view */}
+      {view === "list" && (
+        <TaskList
+          tasks={filteredTasks}
+          onComplete={handleCompleteWithTime}
+          onEdit={setEditingTask}
+          onDelete={handleDelete}
+          onReopen={handleReopen}
+          showFilters={false}
+          emptyMessage="No tasks match your filters."
+          isLoading={completeTask.isPending}
+        />
+      )}
 
-      {/* Create Task Form */}
+      {view === "kanban" && (
+        <TaskKanbanBoard
+          tasks={filteredTasks}
+          onCompleteClick={handleCompleteClick}
+          onEdit={setEditingTask}
+          onDelete={handleDelete}
+          onReopen={handleReopen}
+          onUpdatePriority={handleUpdatePriority}
+        />
+      )}
+
+      {view === "calendar" && (
+        <TaskCalendarView
+          tasks={filteredTasks}
+          onComplete={(taskId, mins) => handleCompleteWithTime(taskId, mins)}
+          onEdit={setEditingTask}
+          onDelete={handleDelete}
+          onReopen={handleReopen}
+        />
+      )}
+
+      {view === "table" && (
+        <TaskTableView
+          tasks={filteredTasks}
+          onCompleteClick={handleCompleteClick}
+          onEdit={setEditingTask}
+          onDelete={handleDelete}
+          onReopen={handleReopen}
+        />
+      )}
+
+      {/* Create dialog */}
       <TaskForm
         users={users}
         currentUserId={currentUserId}
-        onSubmit={handleCreateTask}
+        onSubmit={handleCreate}
         isLoading={createTask.isPending}
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
       />
 
-      {/* Edit Task Form */}
+      {/* Edit dialog */}
       <TaskForm
         task={editingTask}
         users={users}
         currentUserId={currentUserId}
-        onSubmit={handleEditTask}
+        onSubmit={handleEdit}
         isLoading={updateTask.isPending}
         open={!!editingTask}
         onOpenChange={(open) => !open && setEditingTask(null)}
+      />
+
+      {/* Complete with time-tracking dialog (shared across all views) */}
+      <CompleteTaskDialog
+        task={taskToComplete}
+        open={!!taskToComplete}
+        onOpenChange={(open) => !open && setTaskToComplete(null)}
+        onComplete={handleCompleteWithTime}
+        isLoading={completeTask.isPending}
       />
     </div>
   );

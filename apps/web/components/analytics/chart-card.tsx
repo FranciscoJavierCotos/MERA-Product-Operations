@@ -77,7 +77,7 @@ export function ChartCard({
           )}
         </div>
       </CardHeader>
-      <CardContent className={cn("pt-0 flex-1", bodyHeight)}>
+      <CardContent className={cn("pt-0", bodyHeight)}>
         {isLoading ? (
           <Skeleton />
         ) : isError ? (

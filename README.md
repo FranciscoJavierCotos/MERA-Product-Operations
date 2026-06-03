@@ -55,7 +55,7 @@ Most ops teams fragment their work across a ticketing tool, a chat thread, a tas
       <br/><sub><b>Ticket detail</b> — status, SLA timer, rich-text resolution, comments, and audit trail</sub>
     </td>
     <td align="center" width="50%">
-      <img src="./docs/screenshots/dashboard.png" alt="Dashboard" />
+      <img src="./docs/screenshots/Dashboard.png" alt="Dashboard" />
       <br/><sub><b>Dashboard</b> — real-time team overview and SLA health</sub>
     </td>
   </tr>

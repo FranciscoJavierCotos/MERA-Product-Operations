@@ -1,6 +1,6 @@
 # MERA — Product Operations Platform
 
-> An open-source, AI-native workspace for product ops teams. Tickets, SLAs, knowledge retrieval, and Scrum delivery — unified in a single system where the database is the source of truth.
+> An open-source, AI-native workspace for product ops teams. Tickets, SLAs, AI-powered knowledge retrieval, and Scrum delivery — unified in a single system where the database is the source of truth, with full teams management built in.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16_App_Router-black?style=flat-square)
 ![Fastify](https://img.shields.io/badge/Fastify-5_API-000000?style=flat-square&logo=fastify)
@@ -16,7 +16,7 @@
 ![Semgrep](https://img.shields.io/badge/Semgrep-OWASP_Top_10-1B2A4E?style=flat-square)
 
 <p align="center">
-  <img src="./docs/screenshots/ad-dark.png" width="960" alt="MERA Dashboard" />
+  <img src="./docs/screenshots/analytics.png" width="960" alt="MERA Dashboard" />
 </p>
 
 ---
@@ -33,15 +33,15 @@ Most ops teams fragment their work across a ticketing tool, a chat thread, a tas
 
 ## Core Surfaces
 
-| Surface                    | What it does                                                                                                                                                                                                               |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Tickets**                | Full lifecycle — status, priority, temperature, SLA, rich-text resolution, realtime comments, immutable audit trail                                                                                                        |
-| **SLA Engine**             | Per-priority response & resolution policies, auto-assigned on creation, pause/resume on customer-blocked statuses, computed at read time — no cron, no drift                                                               |
-| **AI Knowledge Center**    | Closed tickets + uploaded PDFs chunked and embedded via Gemini. Unified retrieval ranked by similarity, governed by admin-tunable weights and thresholds                                                                   |
-| **Projects & Scrum**       | Projects, sprints, work items (epic / story / task / bug), drag-and-drop Kanban board, and a unified Sprints planning view                                                                                                 |
-| **Team Management**        | Business, support (L1/L2), and engineering squads — CRUD inline, many-to-many membership with roles                                                                                                                        |
-| **Client Companies (CRM)** | Per-client view at `/companies` — contacts, tickets grouped by category, linked project features, and a categorical **health meter** with a full change history. Tickets & projects carry an optional `company_id`         |
-| **Client Support Portal**  | Public, unauthenticated animated hero at `/support` where external clients submit tickets — validates, simulates submission, and tags the payload `source: "client-portal"` to distinguish external from internal requests |
+| Surface                    | What it does                                                                                                                                                                                                                                                                                                                |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tickets**                | Full lifecycle — status, priority, temperature, SLA, rich-text resolution, realtime comments, immutable audit trail                                                                                                                                                                                                         |
+| **SLA Engine**             | Per-priority response & resolution policies, auto-assigned on creation, pause/resume on customer-blocked statuses, computed at read time — no cron, no drift                                                                                                                                                                |
+| **AI Knowledge Center**    | Closed tickets + uploaded PDFs chunked and embedded via Gemini. Unified retrieval ranked by similarity, governed by admin-tunable weights and thresholds                                                                                                                                                                    |
+| **Projects & Scrum**       | Projects, sprints, work items (epic / story / task / bug), drag-and-drop Kanban board, and a unified Sprints planning view                                                                                                                                                                                                  |
+| **Team Management**        | Business, support (L1/L2), and engineering squads — CRUD inline, many-to-many membership with roles                                                                                                                                                                                                                         |
+| **Client Companies (CRM)** | Per-client view at `/companies` — contacts, tickets grouped by category, linked project features, and a categorical **health meter** with a full change history. Tickets & projects carry an optional `company_id`                                                                                                          |
+| **Client Support Portal**  | Public, unauthenticated animated hero at `/support` where external clients submit tickets — validates, simulates submission, and tags the payload `source: "client-portal"` to distinguish external from internal requests                                                                                                  |
 | **Analytics**              | Trended reporting hub at `/analytics` — a range-scoped (7d/30d/QTD/YTD) counterpart to the real-time dashboard. Hero KPI strip (SLA compliance, median + P90 resolution, net flow, reopen rate, at-risk accounts) plus Recharts sections for SLA, ticket flow, resolution distribution, account health, and sprint velocity |
 
 ---
@@ -51,34 +51,12 @@ Most ops teams fragment their work across a ticketing tool, a chat thread, a tas
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="./docs/screenshots/all-tickets.png" alt="Tickets" />
-      <br/><sub><b>Ticket Queue</b> — status, priority, SLA countdown, temperature, team & "assigned to me" filters</sub>
+      <img src="./docs/screenshots/ticket.png" alt="Ticket detail" />
+      <br/><sub><b>Ticket detail</b> — status, SLA timer, rich-text resolution, comments, and audit trail</sub>
     </td>
     <td align="center" width="50%">
-      <img src="./docs/screenshots/scrum-project.png" alt="Scrum Board" />
-      <br/><sub><b>Scrum Board</b> — sprints, epics, stories, bugs, drag-and-drop kanban</sub>
-    </td>
-  </tr>
-</table>
-
-<br/>
-
-<p align="center">
-  <img src="./docs/screenshots/ai-knowledge-center.png" width="960" alt="AI Knowledge Center" />
-  <br/><sub><b>AI Knowledge Center</b> — every closed ticket auto-indexed as a 768-dim embedding; PDFs chunked and ingested via Gemini edge functions</sub>
-</p>
-
-<br/>
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="./docs/screenshots/ticket-page.png" alt="Ticket Page" />
-      <br/><sub><b>Ticket Page</b> — full ticket context</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="./docs/screenshots/Dashboard.png" alt="Dashboard" />
-      <br/><sub><b>Dashboard</b> — team overview</sub>
+      <img src="./docs/screenshots/dashboard.png" alt="Dashboard" />
+      <br/><sub><b>Dashboard</b> — real-time team overview and SLA health</sub>
     </td>
   </tr>
 </table>

@@ -1,12 +1,23 @@
 import Link from "next/link";
-import { api } from "@/lib/api-client";
+import { api, ApiError } from "@/lib/api-client";
 import type { ProjectListItem } from "@/types/project.types";
 import { Button } from "@/components/ui/button";
 import { ProjectCard } from "@/components/projects/project-card";
 import { FolderKanban, Plus } from "lucide-react";
 
 export default async function ProjectsPage() {
-  const projects = await api.get<ProjectListItem[]>("/projects");
+  let projects: ProjectListItem[] = [];
+  let errorMessage: string | null = null;
+
+  try {
+    projects = await api.get<ProjectListItem[]>("/projects");
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 429) {
+      errorMessage = "Too many requests. Please wait a moment and refresh the page.";
+    } else {
+      errorMessage = "Failed to load projects. Please try again.";
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -27,7 +38,11 @@ export default async function ProjectsPage() {
         </Link>
       </header>
 
-      {projects.length === 0 ? (
+      {errorMessage ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <p className="text-red-700 text-sm">{errorMessage}</p>
+        </div>
+      ) : projects.length === 0 ? (
         <div className="rounded-lg border border-dashed border-gray-300 bg-white p-12 text-center">
           <p className="text-gray-500">No projects yet.</p>
           <Link href="/projects/new" className="text-primary text-sm underline mt-2 inline-block">
